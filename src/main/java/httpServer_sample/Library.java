@@ -22,35 +22,37 @@ public class Library {
         	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         	){
 
-        	String line = in.readLine();
-        	StringBuilder header = new StringBuilder();
-        	int contentLength = 0;
-
-        	while (line != null && !line.isEmpty()) {
-        		if (line.startsWith("Content-Length")) {
-                    contentLength = Integer.parseInt(line.split(":")[1].trim());
-                }
-        		header.append(line + "\n");
-                line = in.readLine();
-        	}
-
-        	String body = "";
-
-        	if(contentLength > 0) {
-        		char[] b = new char[contentLength];
-        		in.read(b,0,contentLength);
-        		body = new String(b);
-        	}
-
-        	System.out.println(header);
-        	System.out.println(body);
-
-        	bw.write("HTTP/1.1 200 OK" + "\n" +
-        			"Content-Type: text/html" + "\n" + "\n" +
-        			"<h1>Hello World!!</h1>\n");
-            bw.flush();
         }
 
         System.out.println("<<< end server");
     }
+
+    public Request requestReceive(BufferedReader in) throws Exception {
+    	String line = in.readLine();
+
+    	String[] firstLine = line.split(" ",3);
+    	Request request = new Request(firstLine[0], firstLine[1], firstLine[2]);
+
+    	line =  in.readLine();
+    	int contentLength = 0;
+    	while (line != null && !line.isEmpty()) {
+    		if (line.startsWith("Content-Length")) {
+    			contentLength = Integer.parseInt(line.split(":")[1].trim());
+    		}
+
+    		String[] record = line.split(";",2);
+    		request.addHeader(record[0], record[1]);
+    		line = in.readLine();
+    	}
+
+    	if (0 < contentLength) {
+    		char[] c = new char[contentLength];
+    		in.read(c);
+    		request.setBody(new String(c));
+    	}
+
+    	return request;
+    }
+
+
 }
