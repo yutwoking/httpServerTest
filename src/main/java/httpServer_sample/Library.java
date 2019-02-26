@@ -9,50 +9,39 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-
+import java.util.Map.Entry;
 
 public class Library {
-    public static void main(String[] args) throws Exception {
-        System.out.println("start server >>>");
+	public static void main(String[] args) throws Exception {
+		System.out.println("start server >>>");
 
-        try(
-        	ServerSocket server = new ServerSocket(80);
-        	Socket socket = server.accept();
-        	BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(),"UTF-8"));
-        	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        	){
+		try (
+				ServerSocket server = new ServerSocket(80);
+				Socket socket = server.accept();
+				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));) {
 
-        }
+			Request request = new Request(in);
+			System.out.println(request.get1stLine());
+			for (Entry<String, String> entry : request.getHeaders().entrySet()) {
+				System.out.println(entry.getKey() + "：" + entry.getValue());
+			}
+			System.out.println();
+			System.out.println(request.getBody());
 
-        System.out.println("<<< end server");
-    }
+			Response response = new Response(request);
 
-    public Request requestReceive(BufferedReader in) throws Exception {
-    	String line = in.readLine();
+			bw.write(response.get1stLine() + "\n");
+			for (Entry<String, String> entry : response.getHeaders().entrySet()) {
+				bw.write(entry.getKey() + "：" + entry.getValue() + "\n");
+			}
+			bw.write("\n");
+			bw.write(response.getBody());
+			bw.flush();
 
-    	String[] firstLine = line.split(" ",3);
-    	Request request = new Request(firstLine[0], firstLine[1], firstLine[2]);
+		}
 
-    	line =  in.readLine();
-    	int contentLength = 0;
-    	while (line != null && !line.isEmpty()) {
-    		if (line.startsWith("Content-Length")) {
-    			contentLength = Integer.parseInt(line.split(":")[1].trim());
-    		}
-
-    		String[] record = line.split(";",2);
-    		request.addHeader(record[0], record[1]);
-    		line = in.readLine();
-    	}
-
-    	if (0 < contentLength) {
-    		char[] c = new char[contentLength];
-    		in.read(c);
-    		request.setBody(new String(c));
-    	}
-
-    	return request;
-    }
-
+		System.out.println("<<< end server");
+	}
 
 }

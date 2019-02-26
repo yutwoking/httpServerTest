@@ -9,7 +9,7 @@ public abstract class AbstractHTTPMessage {
 
 	public AbstractHTTPMessage() {
 		this.headers = new HashMap<>();
-		this.body = null;
+		this.body = "";
 	}
 
 	public void addHeader(String key, String value) {
@@ -29,15 +29,4 @@ public abstract class AbstractHTTPMessage {
 	}
 
 	public abstract String get1stLine();
-
-	public StringBuilder getMessage() {
-		StringBuilder message = null;
-		message.append(get1stLine() + "\n");
-		for (Map.Entry<String,String> entry : headers.entrySet()) {
-			message.append(entry.getKey() + ":" + entry.getValue() + "\n\n");
-		}
-		message.append(body);
-
-		return message;
-	}
 }
