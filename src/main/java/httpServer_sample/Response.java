@@ -23,7 +23,9 @@ public class Response extends AbstractHTTPMessage {
 	}
 
 	public enum Status {
-		OK(200, "OK"), BAD_REQUEST(400, "Bad Request"), NOT_FOUND(404, "Not Found");
+		OK(200, "OK"),
+		BAD_REQUEST(400, "Bad Request"),
+		NOT_FOUND(404, "Not Found");
 
 		private int code;
 		private String reason;

@@ -15,33 +15,43 @@ public class Library {
 	public static void main(String[] args) throws Exception {
 		System.out.println("start server >>>");
 
-		try (
-				ServerSocket server = new ServerSocket(80);
-				Socket socket = server.accept();
-				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));) {
-
-			Request request = new Request(in);
-			System.out.println(request.get1stLine());
-			for (Entry<String, String> entry : request.getHeaders().entrySet()) {
-				System.out.println(entry.getKey() + "：" + entry.getValue());
+		try (ServerSocket server = new ServerSocket(80);) {
+			while (true) {
+				serverWork(server);
 			}
-			System.out.println();
-			System.out.println(request.getBody());
-
-			Response response = new Response(request);
-
-			bw.write(response.get1stLine() + "\n");
-			for (Entry<String, String> entry : response.getHeaders().entrySet()) {
-				bw.write(entry.getKey() + "：" + entry.getValue() + "\n");
-			}
-			bw.write("\n");
-			bw.write(response.getBody());
-			bw.flush();
-
+		}catch (Exception e) {
+			e.printStackTrace(System.err);
 		}
+	}
 
-		System.out.println("<<< end server");
+	public static void serverWork(ServerSocket server) throws Exception {
+		Socket socket = server.accept();
+		System.out.println("start request >>>");
+		BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+		Request request = new Request(in);
+		System.out.println(request.get1stLine());
+		for (Entry<String, String> entry : request.getHeaders().entrySet()) {
+			System.out.println(entry.getKey() + "：" + entry.getValue());
+		}
+		System.out.println();
+		System.out.println(request.getBody());
+
+		Response response = new Response(request);
+
+		bw.write(response.get1stLine() + "\n");
+		for (Entry<String, String> entry : response.getHeaders().entrySet()) {
+			bw.write(entry.getKey() + "：" + entry.getValue() + "\n");
+		}
+		bw.write("\n");
+		bw.write(response.getBody());
+		bw.flush();
+
+		bw.close();
+
+		System.out.println("<<< end request");
+
 	}
 
 }
