@@ -3,11 +3,17 @@ package httpServer_sample;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Response extends AbstractHTTPMessage {
 	String version;
 	Status status;
+	Map<String,String> queries;
 
 	public String getVersion() {
 		return version;
@@ -49,22 +55,23 @@ public class Response extends AbstractHTTPMessage {
 
 		if (request.getMethod().equals("GET")) {
 
-			if (request.getHeaders().containsKey("Name")) {
-				this.setBody("<h1>Hello " + request.getHeaders().get("Name") + "!!</h1>");
-				this.status = Status.OK;
-			} else {
 				try {
 					String fileName = request.getURI().substring(request.getURI().lastIndexOf("/"));
 					if (fileName.equals("/")) {
 						fileName = "/index.html";
 					}
-					this.bodyFileReader(fileName);
-					this.status = Status.OK;
+
+					if(fileName.startsWith("/?")) {
+						this.queryProcess(fileName);
+					}else {
+						this.bodyFileReader(fileName);
+						this.status = Status.OK;
+					}
+
 				} catch (Exception e) {
 					this.bodyFileReader("/404.html");
 					this.status = Status.NOT_FOUND;
 				}
-			}
 
 		} else if (request.getMethod().equals("POST")) {
 			this.status = Status.OK;
@@ -89,6 +96,25 @@ public class Response extends AbstractHTTPMessage {
 		file.close();
 
 		this.addHeader("Content-Type", " text/html; charset=utf-8");
+	}
+
+	public void queryProcess(String fileName) throws Exception {
+		this.queries = new HashMap<>();
+
+		List<String> query = Arrays.asList(fileName.substring(2).split("&"));
+		this.queries = query.stream()
+							.collect(Collectors.toMap
+									(s -> s.toString().substring(0,s.toString().indexOf("=")),
+										s -> s.toString().substring(s.toString().indexOf("=")+1)));
+
+		if (queries.containsKey("Name")) {
+			this.status = Status.OK;
+			this.setBody("<h1>Hello " + queries.get("Name") + "!!<h1>");
+		}else {
+			this.bodyFileReader("/404.html");
+			this.status = Status.NOT_FOUND;
+		}
+
 	}
 
 }
