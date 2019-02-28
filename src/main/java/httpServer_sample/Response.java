@@ -23,9 +23,7 @@ public class Response extends AbstractHTTPMessage {
 	}
 
 	public enum Status {
-		OK(200, "OK"),
-		BAD_REQUEST(400, "Bad Request"),
-		NOT_FOUND(404, "Not Found");
+		OK(200, "OK"), BAD_REQUEST(400, "Bad Request"), NOT_FOUND(404, "Not Found");
 
 		private int code;
 		private String reason;
@@ -51,16 +49,21 @@ public class Response extends AbstractHTTPMessage {
 
 		if (request.getMethod().equals("GET")) {
 
-			try {
-				String fileName = request.getURI().substring(request.getURI().lastIndexOf("/"));
-				if (fileName.equals("/")) {
-					fileName = "/index.html";
-				}
-				this.bodyFileReader(fileName);
+			if (request.getHeaders().containsKey("Name")) {
+				this.setBody("<h1>Hello " + request.getHeaders().get("Name") + "!!</h1>");
 				this.status = Status.OK;
-			} catch (Exception e) {
-				this.bodyFileReader("/404.html");
-				this.status = Status.NOT_FOUND;
+			} else {
+				try {
+					String fileName = request.getURI().substring(request.getURI().lastIndexOf("/"));
+					if (fileName.equals("/")) {
+						fileName = "/index.html";
+					}
+					this.bodyFileReader(fileName);
+					this.status = Status.OK;
+				} catch (Exception e) {
+					this.bodyFileReader("/404.html");
+					this.status = Status.NOT_FOUND;
+				}
 			}
 
 		} else if (request.getMethod().equals("POST")) {
